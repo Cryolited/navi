@@ -14,7 +14,7 @@ function Res = P10_NonCohSearchSats(inRes, Params)
 
 %% »Ќ»÷»јЋ»«ј÷»я –≈«”Ћ№“ј“ј
     Search = struct( ...
-        'NumSats',       [], ... % —кал€р, количество найденных спутников
+        'NumSats',       0, ... % —кал€р, количество найденных спутников
         'SatNums',       [], ... % массив 1хNumSats с номерами найденных
             ... % спутников
         'SamplesShifts', [], ... % массив 1хNumSats, каждый элемент -
@@ -53,40 +53,60 @@ function Res = P10_NonCohSearchSats(inRes, Params)
         CALen = 1023 * Res.File.R;
 
 %% ќ—Ќќ¬Ќјя „ј—“№ ‘”Ќ ÷»»
-%       inFile.Name = 'Z:\ћетодические материалы\—Ќ—\MATLAB\Signals\30_08_2018__19_38_33_x02_1ch_16b_15pos_90000ms.dat';
-%       inFile.HeadLenInBytes = 0;
-%       inFile.NumOfChannels =1;
-%       inFile.ChanNum = 0;
-%       inFile.DataType = 'int16';
-%       inFile.Fs0= 2046e3;
-%       inFile.dF = 0 ;
-%       inFile.FsDown = 1;
-%       inFile.FsUp = 1;
-      
+ 
       
       NumOfShiftedSamples = 0;
       NumOfNeededSamples = 2*CALen-1;
       NumSatellite = 32;
-      drawThreshold = 5; % ѕорог отрисовки значений
-    Signal = ReadSignalFromFile(Res.File, NumOfShiftedSamples, NumOfNeededSamples);
-    Cor3 = zeros( NumCFreqs, CALen  );
+      drawThreshold = 5; % ѕорог отрисовки значений, пока что свой(Search.SearchThreshold)
+      drawFlag = 1; % ‘лаг отрисовки
+      nonCohFlag = 1; % ‘лаг неког. обр.
+      
+    if (nonCohFlag == 1)
+        NumRepeat = 4; % ќпасно
+    else
+        NumRepeat = 1;
+    end
+    Cor3 = zeros( NumCFreqs, CALen );
     dt = 1 / Res.File.Fs;
+    LastSat = 0;
+    
 for n=1:NumSatellite
     CACode = GenCACode(n,1);
     CACode2 = repelem(CACode,Res.File.R);
-    for m=1:NumCFreqs
-        freq = CentralFreqs(m);
-        doppler = exp(1j*2*pi*freq*[1:length(CACode2)] * dt);
-        CACodeM = CACode2 .* doppler;                
-        Cor3(m,:) = conv(Signal,fliplr(CACodeM), 'valid');       
+    CorAbs = zeros( NumCFreqs, CALen ); % обновление дл€ накоплени€
+    for k=1:NumRepeat % accumulation!! 
+        NumOfShiftedSamples = (k-1)*(NumOfNeededSamples+1); % +1 чтоб совпадал сдвиг
+        Signal = ReadSignalFromFile(Res.File, NumOfShiftedSamples, NumOfNeededSamples);
+        for m=1:NumCFreqs
+            freq = CentralFreqs(m);
+            doppler = exp(1j*2*pi*freq*[1:length(CACode2)] * dt);
+            CACodeM = CACode2 .* doppler;                
+            Cor3(m,:) = conv(Signal,fliplr(CACodeM), 'valid');       
+        end
+        %disp([ max(max(abs(Cor3))) ,  mean(mean(abs(Cor3))), max(max(abs(Cor3)))/mean(mean(abs(Cor3)))]);
+        CorAbs = CorAbs + abs(Cor3); % накопление!!
+        MaxVal = max(max(CorAbs));
+        CorVal = MaxVal/mean(mean(CorAbs));
     end
-    %disp([ max(max(abs(Cor3))) ,  mean(mean(abs(Cor3))), max(max(abs(Cor3)))/mean(mean(abs(Cor3)))]);
-    if ( max(max(abs(Cor3)))/mean(mean(abs(Cor3))) > drawThreshold )
-        figure();
-        mesh(abs(Cor3));
+    if ( CorVal > drawThreshold && LastSat ~= n )
+        if ( drawFlag == 1 )
+            figure();
+            mesh(CorAbs);
+        end   
+        Search.NumSats = Search.NumSats + 1; 
+        Search.CorVals(end+1) = CorVal;
+        Search.SatNums(end+1) = n;
+        
+        [MaxFreq,MaxCA] = find(CorAbs==MaxVal);
+        Search.FreqShifts(end+1) = CentralFreqs(MaxFreq);
+        Search.SamplesShifts(end+1) = mod(MaxCA , CALen);
+        LastSat = n;
     end
-    
+    Search.AllCorVals(n) = MaxVal;
+
 end
-    
+
+
 
 end
