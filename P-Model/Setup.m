@@ -2,10 +2,10 @@ function Params = Setup()
 
 % Main
     % Номер процедуры, с которой надо начать выполнение Main
-        Main.StartProcNum = 1; %  1 <= StartProcNum <= length(FuncNames)
+        Main.StartProcNum = 6; %  1 <= StartProcNum <= length(FuncNames)
 
     % Номер процедуры, на которой надо закончить выполнение Main
-        Main.StopProcNum = 1; %  1 <= StopProcNum <= length(FuncNames) и
+        Main.StopProcNum = 7; %  1 <= StopProcNum <= length(FuncNames) и
             % StartProcNum <= StopProcNum
 
 	% Выбор типа обработки - устанавливается для StartProcNum = 1, чтобы
@@ -19,7 +19,7 @@ function Params = Setup()
 
     % Выбор имени файла-записи
         % Директория с файлами-записями
-            Main.SigDirName = 'Z:\Методические материалы\СНС\MATLAB\Signals';
+            Main.SigDirName = '';
         % Имя файла-записи
             Main.SigFileName = '28_01_2019__17_02_51_x02_1ch_16b_15pos_200000ms.dat';
 

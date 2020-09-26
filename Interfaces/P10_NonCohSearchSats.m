@@ -53,6 +53,40 @@ function Res = P10_NonCohSearchSats(inRes, Params)
         CALen = 1023 * Res.File.R;
 
 %% ÎÑÍÎÂÍÀß ×ÀÑÒÜ ÔÓÍÊÖÈÈ
-
+%       inFile.Name = 'Z:\Ìåòîäè÷åñêèå ìàòåðèàëû\ÑÍÑ\MATLAB\Signals\30_08_2018__19_38_33_x02_1ch_16b_15pos_90000ms.dat';
+%       inFile.HeadLenInBytes = 0;
+%       inFile.NumOfChannels =1;
+%       inFile.ChanNum = 0;
+%       inFile.DataType = 'int16';
+%       inFile.Fs0= 2046e3;
+%       inFile.dF = 0 ;
+%       inFile.FsDown = 1;
+%       inFile.FsUp = 1;
+      
+      
+      NumOfShiftedSamples = 0;
+      NumOfNeededSamples = 2*CALen-1;
+      NumSatellite = 32;
+      drawThreshold = 5; % Ïîðîã îòðèñîâêè çíà÷åíèé
+    Signal = ReadSignalFromFile(Res.File, NumOfShiftedSamples, NumOfNeededSamples);
+    Cor3 = zeros( NumCFreqs, CALen  );
+    dt = 1 / Res.File.Fs;
+for n=1:NumSatellite
+    CACode = GenCACode(n,1);
+    CACode2 = repelem(CACode,Res.File.R);
+    for m=1:NumCFreqs
+        freq = CentralFreqs(m);
+        doppler = exp(1j*2*pi*freq*[1:length(CACode2)] * dt);
+        CACodeM = CACode2 .* doppler;                
+        Cor3(m,:) = conv(Signal,fliplr(CACodeM), 'valid');       
+    end
+    %disp([ max(max(abs(Cor3))) ,  mean(mean(abs(Cor3))), max(max(abs(Cor3)))/mean(mean(abs(Cor3)))]);
+    if ( max(max(abs(Cor3)))/mean(mean(abs(Cor3))) > drawThreshold )
+        figure();
+        mesh(abs(Cor3));
+    end
+    
+end
+    
 
 end
