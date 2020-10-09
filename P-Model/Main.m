@@ -67,7 +67,11 @@ close all;
         % Имя файла-записи
             SigFileName = Params.Main.SigFileName;
         % Полное имя файла-записи
-            SigFileName = [SigDirName, '\', SigFileName];
+            if (contains(system_dependent('getos'),'Linux'))
+                SigFileName = [SigDirName, '/', SigFileName]; 
+            else
+                SigFileName = [SigDirName, '\', SigFileName];
+            end
 
     % Имя файла для загрузки результатов
     % Если StartProcNum = 1, то не надо ничего загружать
@@ -86,6 +90,9 @@ close all;
             LoadFileName = [SaveDirName, '\', LoadFileName];
         end
         SaveFileName = [SaveDirName, '\', SaveFileName];
+        if (contains(system_dependent('getos'),'Linux'))
+            SaveFileName = [SaveDirName, '/', SaveFileName];            
+        end
 
 %% УСТАНОВКА РЕДКО ИЗМЕНЯЕМЫХ ПАРАМЕТРОВ
     if StartProcNum == 1

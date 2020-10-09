@@ -2,16 +2,16 @@ function Params = Setup()
 
 % Main
     % Номер процедуры, с которой надо начать выполнение Main
-        Main.StartProcNum = 1; %  1 <= StartProcNum <= length(FuncNames)
+        Main.StartProcNum = 6; %  1 <= StartProcNum <= length(FuncNames)
 
     % Номер процедуры, на которой надо закончить выполнение Main
-        Main.StopProcNum = 1; %  1 <= StopProcNum <= length(FuncNames) и
+        Main.StopProcNum = 7; %  1 <= StopProcNum <= length(FuncNames) и
             % StartProcNum <= StopProcNum
 
 	% Выбор типа обработки - устанавливается для StartProcNum = 1, чтобы
 	%   не быть случайно изменённым в дальнейшем
     % 'Coh'/'NonCoh' - когерентная обработка / некогерентная обработка
-        Main.ProcessType = 'Coh';
+        Main.ProcessType = 'NonCoh';
 
     % Флаг необходимости прорисовки результатов
         Main.isDraw = 3; % 0 - не рисовать; 1 - рисовать; 2 - рисовать и
@@ -19,13 +19,9 @@ function Params = Setup()
 
     % Выбор имени файла-записи
         % Директория с файлами-записями
-            %Main.SigDirName = 'Z:\Методические материалы\СНС\MATLAB\Signals';
-            Main.SigDirName = 'L:\Navigation data';             
-            if (contains(system_dependent('getos'),'Linux'))
-                Main.SigDirName = '/home/abeks/other';             
-            end
+            Main.SigDirName = '';
         % Имя файла-записи
-            Main.SigFileName = '30_08_2018__19_38_33_x02_1ch_16b_15pos_90000ms.dat';
+            Main.SigFileName = '28_01_2019__17_02_51_x02_1ch_16b_15pos_200000ms.dat';
 
     % Имя файла для загрузки результатов
     % Если StartProcNum = 1, то не надо ничего загружать

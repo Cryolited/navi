@@ -54,3 +54,83 @@ function Res = P10_CohSearchSats(inRes, Params)
         CALen = 1023 * Res.File.R;
 
 %% ќ—Ќќ¬Ќјя „ј—“№ ‘”Ќ ÷»»
+
+    % ƒлина CA-кода с учЄтом частоты дискретизации
+        CALen = 1023 * Res.File.R;
+
+    %  оличество периодов CA-кода, приход€щихс€ на один бит
+        CAPerBit = 20;
+
+    % ƒлительность CA-кода, мс
+        TCA = 10^-3;
+
+%% ќ—Ќќ¬Ќјя „ј—“№ ‘”Ќ ÷»» - “–≈ »Ќ√ » Ѕ»“ќ¬јя —»Ќ’–ќЌ»«ј÷»я
+
+df = 50;
+f = 3250 : df : 3750; % сдвиг по частоте
+dt = 2; % сдвиг по отчетам 
+
+
+
+      NumOfShiftedSamples = 0;
+      NumOfNeededSamples = 2*CALen-1;
+      NumSatellite = 3; %32
+      drawThreshold = 3; % ѕорог отрисовки значений, пока что свой(Search.SearchThreshold)
+      drawFlag = 1; % ‘лаг отрисовки
+      nonCohFlag = 1; % ‘лаг неког. обр.
+      
+    if (nonCohFlag == 1)
+        NumRepeat = 10; % ќпасно
+    else
+        NumRepeat = 1;
+    end
+    Cor3 = zeros( NumCFreqs, NumOfNeededSamples*5-CALen +1 );
+    dt = 1 / Res.File.Fs;
+    LastSat = 0;
+
+for n=1:NumSatellite
+    tic
+    CACode = GenCACode(n,1);
+    CACode2 = repelem(CACode,Res.File.R);
+    CorAbs = zeros( NumCFreqs, CALen ); % обновление дл€ накоплени€
+    %CorAbs2 = zeros( NumCFreqs, CALen );    
+%     for k=1:NumRepeat 
+%         NumOfShiftedSamples = (k-1)*(NumOfNeededSamples+1); % +1 чтоб совпадал сдвиг
+%         Signal = ReadSignalFromFile(Res.File, NumOfShiftedSamples, NumOfNeededSamples);
+        Signal = ReadSignalFromFile(Res.File, NumOfShiftedSamples, NumOfNeededSamples*5);
+        for m=1:NumCFreqs
+            freq = CentralFreqs(m);
+            doppler = exp(1j*2*pi*freq*[1:length(Signal)] * dt);
+            SignalM = Signal .* doppler;                
+            Cor3(m,:) = conv(SignalM,fliplr(CACode2), 'valid');       
+        end
+
+        %disp([ max(max(abs(Cor3))) ,  mean(mean(abs(Cor3))), max(max(abs(Cor3)))/mean(mean(abs(Cor3)))]);
+        %CorAbs = CorAbs + Cor3; % накопление 1 !!
+%    end
+    
+    
+    CorAbs = abs(Cor3);
+    MaxVal = max(max(CorAbs));
+    CorVal = MaxVal/mean(mean(CorAbs));
+
+    if ( CorVal > drawThreshold && LastSat ~= n )
+        if ( drawFlag == 1 )
+            figure();
+            mesh(CorAbs);
+        end   
+        Search.NumSats = Search.NumSats + 1; 
+        Search.CorVals(end+1) = CorVal;
+        Search.SatNums(end+1) = n;
+        
+        [MaxFreq,MaxCA] = find(CorAbs==MaxVal);
+        Search.FreqShifts(end+1) = CentralFreqs(MaxFreq);
+        Search.SamplesShifts(end+1) = mod(MaxCA , CALen);
+        LastSat = n;
+    end
+    Search.AllCorVals(n) = MaxVal;
+    toc
+end
+
+Res.Search = Search;
+end

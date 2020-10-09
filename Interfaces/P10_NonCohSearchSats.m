@@ -82,9 +82,10 @@ for n=1:NumSatellite
         Signal = ReadSignalFromFile(Res.File, NumOfShiftedSamples, NumOfNeededSamples);
         for m=1:NumCFreqs
             freq = CentralFreqs(m);
-            doppler = exp(1j*2*pi*freq*[1:length(CACode2)] * dt);
-            CACodeM = CACode2 .* doppler;                
-            Cor3(m,:) = conv(Signal,fliplr(CACodeM), 'valid');       
+            doppler = exp(1j*2*pi*freq*[0:length(Signal)-1] * dt); 
+            SignalM = Signal .* doppler;
+            %CACodeM = CACode2 .* doppler;                
+            Cor3(m,:) = conv(SignalM,fliplr(CACode2), 'valid');       
         end
         %disp([ max(max(abs(Cor3))) ,  mean(mean(abs(Cor3))), max(max(abs(Cor3)))/mean(mean(abs(Cor3)))]);
         if k <= NumRepeat
@@ -117,10 +118,9 @@ for n=1:NumSatellite
         Search.SamplesShifts(end+1) = mod(MaxCA , CALen);
         LastSat = n;
     end
-    Search.AllCorVals(n) = MaxVal;
+    Search.AllCorVals(n) = CorVal;
     toc
 end
-
-
+Res.Search = Search;
 
 end
