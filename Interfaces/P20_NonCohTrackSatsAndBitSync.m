@@ -77,15 +77,28 @@ function Res = P20_NonCohTrackSatsAndBitSync(inRes, Params)
         CAPerBit = 20;
 
 %% ОСНОВНАЯ ЧАСТЬ ФУНКЦИИ - ТРЕКИНГ
+df = 50;
+dt = 2; % сдвиг по отчетам 
+NumOfNeededSamples = CALen + 4;
     % Строка состояния
         fprintf('%s Трекинг спутников\n', datestr(now));
-    for k = 1:Res.Search.NumSats
+    for k = 3:4 %1:Res.Search.NumSats
         % Строка состояния
             fprintf('%s     Трекинг спутника №%02d (%d из %d) ...\n', ...
                 datestr(now), Res.Search.SatNums(k), k, ...
                 Res.Search.NumSats);
-            
-            ...
+            NumOfShiftedSamples = Res.Search.SamplesShifts(k);
+            freq = Res.Search.FreqShifts(k);
+            CACode = GenCACode(k,1);
+            CACode2 = repelem(CACode,Res.File.R);
+            %CorAbs = zeros( NumCFreqs, CALen ); % обновление для накопления            
+            for m=1:50
+                Signal = ReadSignalFromFile(Res.File, NumOfShiftedSamples-2 + CALen*(m-1), NumOfNeededSamples);
+                %Signal = ReadSignalFromFile(Res.File, (m-1)*(2046*2-1+1), 2046*2-1);
+                doppler = exp(1j*2*pi*-freq*[1:length(Signal)] * dt);
+                SignalM = Signal .* doppler;                
+                Cor3(m,:) = conv(SignalM,fliplr(CACode2), 'valid');       
+            end
                 
         % Строка состояния
             fprintf('%s         Завершено.\n', datestr(now));
@@ -97,3 +110,6 @@ function Res = P20_NonCohTrackSatsAndBitSync(inRes, Params)
         fprintf('%s     Завершено.\n', datestr(now));    
 
 %% ОСНОВНАЯ ЧАСТЬ ФУНКЦИИ - БИТОВАЯ СИНХРОНИЗАЦИЯ
+
+
+
