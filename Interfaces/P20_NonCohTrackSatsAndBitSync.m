@@ -78,7 +78,8 @@ function Res = P20_NonCohTrackSatsAndBitSync(inRes, Params)
 
 %% ОСНОВНАЯ ЧАСТЬ ФУНКЦИИ - ТРЕКИНГ
 df = 50;
-dt = 2; % сдвиг по отчетам 
+dt = 2; % сдвиг по отчетам
+dt = 1 / Res.File.Fs;
 NumOfNeededSamples = CALen + 4;
     % Строка состояния
         fprintf('%s Трекинг спутников\n', datestr(now));
